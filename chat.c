@@ -106,6 +106,7 @@ void send_all(char *dest_mac,char* packet,char type,char* interface){
 		case(CHAT):
 			my_msg=(chat)packet;
 			size=sizeof(Chat_t);
+			break;
 		case(CHAT_ACK):
 			ack=(chat_ack)packet;
 			size=sizeof(Chat_Ack_t);
@@ -129,15 +130,14 @@ void send_all(char *dest_mac,char* packet,char type,char* interface){
 	socket_address.sll_addr[4] = dest_mac[4];
 	socket_address.sll_addr[5] = dest_mac[5];
 
-	int count=0;
-	while(1){
-		if(count==BRCAST_WAITING_COUNT) break;
-	    /* Send packet */
-		if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
-		printf("Send failed\n");
-	    sleep(BRCAST_WAITING_TIME);
-	    count++;
-     }
+
+
+
+	/* Send packet */
+	if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
+	printf("Send failed\n");
+	sleep(BRCAST_WAITING_TIME);
+
 }
 
 void send_dbq(){
