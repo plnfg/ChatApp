@@ -181,7 +181,7 @@ void send_hello_resp(char* querier_name,char* querier_surname){
 	send_all(dest_mac,(char*)hello_resp,HELLO_RESPONSE,INTERFACE);
 }
 
-void send_message(char* target_name,char *msg,char packet_id){
+void *send_message(char* target_name,char *msg,char packet_id){
 	chat my_chat;
 	unsigned char *dest_mac=get_mac(target_name);
 	if(dest_mac==NULL){
@@ -240,7 +240,7 @@ unsigned char* get_mac (char *my_target_name) {
 
 		sscanf(line, "%s%s%s", target_name, target_surname,mac);
 		if(strcmp(target_name,my_target_name)==0){
-			printf("Target address is found");
+		//	printf("Target address is found");
 			fflush(stdout);
 			free(target_name);
 			free(target_surname);
@@ -309,6 +309,6 @@ unsigned short get_msg_len(char* msg){
 	unsigned char len_char=(unsigned char)chat_len;
 	unsigned short msg_len;
 	char2short(&len_char,&msg_len);
-	printf("length: %hu",msg_len);
+	//printf("length: %hu",msg_len);
 	return msg_len;
 }

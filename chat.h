@@ -22,10 +22,11 @@
 //}
 
 void send_all(char *dest_mac,char* packet,char type,char* interface);
+void *receive();
 void send_dbq();
 void send_duq(char*,char*);
 void send_hello_resp(char*,char*);
-void send_message(char*,char*,char);
+void *send_message(char*,char*,char);
 void send_ack(char,unsigned char*);
 unsigned char* get_mac(char*);
 int find_mac(char*);

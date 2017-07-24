@@ -79,7 +79,7 @@ void save_mac(char *targetAddr, char *name, char *surname){
 
 unsigned char* DEST_MAC;
 
-int main(){
+void *receive(){
 	char sender[INET6_ADDRSTRLEN];
 	int sockfd, ret, i;
 	int sockopt;
@@ -141,7 +141,7 @@ repeat:	//printf("listener: Waiting to recvfrom...\n");
 			eh->ether_dhost[3] == 0Xff &&
 			eh->ether_dhost[4] == 0Xff &&
 			eh->ether_dhost[5] == 0Xff)){
-		printf("Correct destination MAC address\n");
+	//	printf("Correct destination MAC address\n");
 	} else {
 		/*printf("Wrong destination MAC: %x:%x:%x:%x:%x:%x\n",
 						eh->ether_dhost[0],
@@ -160,16 +160,6 @@ repeat:	//printf("listener: Waiting to recvfrom...\n");
 
 	/* Look up my device IP addr if possible */
 	strncpy(if_ip.ifr_name, ifName, IFNAMSIZ-1);
-	if (ioctl(sockfd, SIOCGIFADDR, &if_ip) >= 0) { /* if we can't check then don't */
-		printf("Source IP: %s\n My IP: %s\n", sender,
-				inet_ntoa(((struct sockaddr_in *)&if_ip.ifr_addr)->sin_addr));
-		/* ignore if I sent it */
-		if (strcmp(sender, inet_ntoa(((struct sockaddr_in *)&if_ip.ifr_addr)->sin_addr)) == 0)	{
-			printf("but I sent it :(\n");
-			ret = -1;
-			goto done;
-		}
-	}
 
 	/* UDP payload length */
 	ret = ntohs(udph->len) - sizeof(struct udphdr);
@@ -179,44 +169,44 @@ repeat:	//printf("listener: Waiting to recvfrom...\n");
 	char *data = malloc(numbytes-18);
 	char *mac=malloc(6);
 	memcpy(mac,&buf[6],6);
-	printf("mac address: %s\n",mac);
 	char type=buf[14];
 	size_t size;
 
 	switch(type){
-		case(QUERY_BROADCAST):
-			size=sizeof(Disc_Broadcast_q);
-			memcpy(data,&buf[14],size);
-			disc_broadcast_q dbq =(disc_broadcast_q)data;
-			printf("\nDQB - [%d][%s][%s]", dbq->type, dbq->req_name, dbq->req_surname);
-			if(get_mac(dbq->req_name)==NULL) save_mac(mac,dbq->req_name,dbq->req_surname);
-			send_hello_resp(dbq->req_name,dbq->req_surname);
-			break;
-		case(QUERY_UNICAST):
-			size=sizeof(Disc_Unicast_q);
-			memcpy(data,&buf[14],size);
-			disc_unicast_q duq =(disc_unicast_q)data;
-			printf("\nDUB - [%d][%s][%s][%s][%s]", duq->type, duq->req_name, duq->req_surname,duq->target_name,duq->target_surname);
-			send_hello_resp(duq->req_name,duq->req_surname);
-			break;
-		case(HELLO_RESPONSE):
-			size=sizeof(Hello_Response);
-			memcpy(data,&buf[14],size);
-			hello hello_resp =(hello)data;
-			printf("\nHello Response - [%d][%s][%s][%s][%s]", hello_resp->type, hello_resp->querier_name, hello_resp->querier_surname,hello_resp->responder_name,hello_resp->responder_surname);
-			break;
+//		case(QUERY_BROADCAST):
+//			size=sizeof(Disc_Broadcast_q);
+//			memcpy(data,&buf[14],size);
+//			disc_broadcast_q dbq =(disc_broadcast_q)data;
+//			printf("\nDQB - [%d][%s][%s]", dbq->type, dbq->req_name, dbq->req_surname);
+//			if(get_mac(dbq->req_name)==NULL) save_mac(mac,dbq->req_name,dbq->req_surname);
+//			send_hello_resp(dbq->req_name,dbq->req_surname);
+//			break;
+//		case(QUERY_UNICAST):
+//			size=sizeof(Disc_Unicast_q);
+//			memcpy(data,&buf[14],size);
+//			disc_unicast_q duq =(disc_unicast_q)data;
+//			printf("\nDUB - [%d][%s][%s][%s][%s]", duq->type, duq->req_name, duq->req_surname,duq->target_name,duq->target_surname);
+//			send_hello_resp(duq->req_name,duq->req_surname);
+//			break;
+//		case(HELLO_RESPONSE):
+//			size=sizeof(Hello_Response);
+//			memcpy(data,&buf[14],size);
+//			hello hello_resp =(hello)data;
+//			printf("\nHello Response - [%d][%s][%s][%s][%s]", hello_resp->type, hello_resp->querier_name, hello_resp->querier_surname,hello_resp->responder_name,hello_resp->responder_surname);
+//			break;
 		case(CHAT):
 			size=sizeof(Chat_t);
 			memcpy(data,&buf[14],size);
 			chat my_chat=(chat)data;
 			send_ack(my_chat->packet_id,mac);
-			printf("\nChat Message - [%d][%hu][%d][%s]", my_chat->type, my_chat->length, my_chat->packet_id,my_chat->message);
+			printf("\nIncoming message: %s \n", my_chat->message);
+			printf(">>");
 			break;
 		case(CHAT_ACK):
 			size=sizeof(Chat_Ack_t);
 			memcpy(data,&buf[14],size);
 			chat_ack ack=(chat_ack)data;
-			printf("\nACK - [%d][%d]", ack->type, ack->packet_id);
+			printf("\nDelivered. \n");
 			break;
 	}
 
@@ -228,7 +218,6 @@ repeat:	//printf("listener: Waiting to recvfrom...\n");
 done:	goto repeat;
 
 	close(sockfd);
-	return 0;
 
 }
 
